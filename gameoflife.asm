@@ -147,8 +147,7 @@ evaluate_next_frame:
     pop rbp
 
     mov rax, 35
-    push dword 0
-    push dword 1
+    push qword 1
     mov rdi, rsp
     mov rsi, 0
     syscall
@@ -192,57 +191,57 @@ coordinates_to_index:
     mul rdx
     add [rbp-8], rax
     cmp qword [rbp-8], 0
-    jge .gt
+    jae .gt
     jmp .end
     .gt:
-        cmp qword [rbp-8], map_size
-            jb .lt
-            jmp .end
-        .lt:
-            mov rax, [rbp-8]
-            add rsp, 8
-            pop rbp
-            ret
-        .end:
-            mov rax, -1
-            add rsp, 8
-            pop rbp
-            ret
-
-
-    ; first 32 bits is x, last 32 bits is y
-    ; int index_to_coordinates(int index)
-    index_to_coordinates:
-        push rbp
-        mov rbp, rsp
-        sub rsp, 16
-        mov qword [rbp-8], 0          ; x
-        mov qword [rbp-16], 0        ; y
-        
-        mov rdx, 0
-        mov rax, rdi
-        mov rcx, [map_size]
-        div rcx
-        mov qword [rbp-8], rdx
-        mov qword [rbp-16], rax
-
-        mov rax, [rbp-8]
-        shl rax, 32
-        add rax, [rbp-16]
-        add rsp, 16
-        pop rbp
-        ret
-
-    ; bool get_cell_value(int x, int y)
-    get_cell_value:
-        call coordinates_to_index
-        cmp rax, -1
-        je .end
-        add rax, [cell_map_backbuffer]
-        cmp byte [rax], 1
-        jb .end
-    mov rax, 1
+    cmp qword [rbp-8], map_size
+    jb .lt
+    jmp .end
+    .lt:
+    mov rax, [rbp-8]
+    add rsp, 8
+    pop rbp
     ret
     .end:
-    mov rax, 0
+    mov rax, -1
+    add rsp, 8
+    pop rbp
     ret
+
+
+; first 32 bits is x, last 32 bits is y
+; int index_to_coordinates(int index)
+index_to_coordinates:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov qword [rbp-8], 0          ; x
+    mov qword [rbp-16], 0        ; y
+    
+    mov rdx, 0
+    mov rax, rdi
+    mov rcx, [width]
+    div rcx
+    mov qword [rbp-8], rdx
+    mov qword [rbp-16], rax
+
+    mov rax, [rbp-8]
+    shl rax, 32
+    add rax, [rbp-16]
+    add rsp, 16
+    pop rbp
+    ret
+
+; bool get_cell_value(int x, int y)
+get_cell_value:
+    call coordinates_to_index
+    cmp rax, -1
+    je .end
+    add rax, [cell_map_backbuffer]
+    cmp byte [rax], 1
+    jb .end
+mov rax, 1
+ret
+.end:
+mov rax, 0
+ret
